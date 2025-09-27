@@ -46,39 +46,86 @@ const StudentAssignment = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-gray-200 rounded-lg shadow-md">
-      <h2 className="text-2xl font-semibold mb-4 text-center">Submit Assignment</h2>
-      {message && (
-        <p className="mb-4 text-center text-sm text-gray-700">{message}</p>
-      )}
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-cyan-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-8">
+          <h2 className="text-3xl font-bold text-white text-center">
+            Submit Assignment
+          </h2>
+          <p className="text-indigo-100 text-center mt-2">
+            Upload your completed work
+          </p>
+        </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <input
-          type="text"
-          placeholder="Class ID"
-          value={classId}
-          onChange={(e) => setClassId(e.target.value)}
-          className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-        <input
-          type="text"
-          placeholder="Assignment ID"
-          value={assignmentId}
-          onChange={(e) => setAssignmentId(e.target.value)}
-          className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-        <input
-          type="file"
-          onChange={handleFileChange}
-          className="border border-gray-300 rounded-md p-2 file:border-0 file:bg-blue-500 file:text-white file:px-3 file:py-1 file:rounded-md cursor-pointer"
-        />
-        <button
-          type="submit"
-          className="bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600 transition-colors"
-        >
-          Submit Assignment
-        </button>
-      </form>
+        <div className="p-8">
+          {message && (
+            <div
+              className={`mb-6 p-4 rounded-lg text-sm font-medium ${
+                message.includes("successfully")
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  : message.includes("Error")
+                  ? "bg-red-50 text-red-700 border border-red-200"
+                  : "bg-amber-50 text-amber-700 border border-amber-200"
+              }`}
+            >
+              {message}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Class ID
+              </label>
+              <input
+                type="text"
+                placeholder="Enter your class ID"
+                value={classId}
+                onChange={(e) => setClassId(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Assignment ID
+              </label>
+              <input
+                type="text"
+                placeholder="Enter assignment ID"
+                value={assignmentId}
+                onChange={(e) => setAssignmentId(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Assignment File
+              </label>
+              <div className="relative">
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer transition-all duration-200"
+                />
+              </div>
+              {file && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Selected: {file.name}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-4 rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+            >
+              Submit Assignment
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };
