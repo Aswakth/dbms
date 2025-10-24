@@ -2,6 +2,7 @@ com\example\backend\controller\StudentController$AssignmentDto.class
 com\example\backend\controller\TeacherController$AttendanceSubmit.class
 com\example\backend\controller\TeacherController$ResultSubmit$ResultData.class
 com\example\backend\model\Enrollment.class
+com\example\backend\controller\TeacherController$AssignmentSubmissionDto.class
 com\example\backend\model\Submission.class
 com\example\backend\auth\AuthFilterConfig.class
 com\example\backend\model\Result.class
@@ -18,6 +19,7 @@ com\example\backend\auth\FirebaseAuthFilter.class
 com\example\backend\repository\ResultRepository.class
 com\example\backend\controller\TeacherController$QueryDto.class
 com\example\backend\model\StudentQuery.class
+com\example\backend\repository\AssignmentSubmissionRepository.class
 com\example\backend\service\FileStorageService.class
 com\example\backend\controller\DebugController.class
 com\example\backend\controller\StudentController$AttendanceDto.class
@@ -25,6 +27,7 @@ com\example\backend\controller\StudentController$ResultDto.class
 com\example\backend\auth\FirebaseInitializer.class
 com\example\backend\repository\TeacherRepository.class
 com\example\backend\controller\StudentController.class
+com\example\backend\model\AssignmentSubmission.class
 com\example\backend\App.class
 com\example\backend\controller\TeacherController$ResultDto.class
 com\example\backend\config\CorsConfig.class

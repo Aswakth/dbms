@@ -7,7 +7,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        // Backend runs on port 8081 (see backend/src/main/resources/application.properties)
+        target: 'http://localhost:8081',
         changeOrigin: true,
         secure: false,
       },

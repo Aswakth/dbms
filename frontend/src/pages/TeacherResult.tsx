@@ -7,7 +7,7 @@ import axios from "axios";
 interface Student {
   id: string;
   name: string;
-  marks?: number;
+  marks: number | string; // ✅ FIXED: allow both number and string
   maxMarks?: number;
 }
 
@@ -51,7 +51,9 @@ const TeacherResult = () => {
   // Update marks for a student
   const handleMarksChange = (id: string, marks: string) => {
     setStudents((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, marks: marks === "" ? "" : Number(marks) } : s))
+      prev.map((s) =>
+        s.id === id ? { ...s, marks: marks === "" ? "" : Number(marks) } : s
+      )
     );
   };
 
@@ -67,11 +69,11 @@ const TeacherResult = () => {
 
     try {
       const resultsData = students
-        .filter(s => s.marks !== "" && s.marks !== undefined)
-        .map((s) => ({ 
-          studentId: Number(s.id), 
-          marks: s.marks, 
-          maxMarks: s.maxMarks || 100 
+        .filter((s) => s.marks !== "" && s.marks !== undefined)
+        .map((s) => ({
+          studentId: Number(s.id),
+          marks: s.marks,
+          maxMarks: s.maxMarks || 100,
         }));
 
       if (resultsData.length === 0) {
@@ -100,9 +102,7 @@ const TeacherResult = () => {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-8">
-            <h2 className="text-3xl font-bold text-white">
-              Enter Student Results
-            </h2>
+            <h2 className="text-3xl font-bold text-white">Enter Student Results</h2>
             <p className="text-indigo-100 mt-2">
               Enter and publish student exam results for your class
             </p>
@@ -193,9 +193,16 @@ const TeacherResult = () => {
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-emerald-600">
-                      {students.filter(s => s.marks !== "" && s.marks !== undefined).length}/{students.length}
+                      {
+                        students.filter(
+                          (s) => s.marks !== "" && s.marks !== undefined
+                        ).length
+                      }
+                      /{students.length}
                     </div>
-                    <div className="text-xs text-gray-500">Marks Entered/Total</div>
+                    <div className="text-xs text-gray-500">
+                      Marks Entered/Total
+                    </div>
                   </div>
                 </div>
 
@@ -220,7 +227,9 @@ const TeacherResult = () => {
                               type="number"
                               placeholder="Marks"
                               value={s.marks === "" ? "" : s.marks}
-                              onChange={(e) => handleMarksChange(s.id, e.target.value)}
+                              onChange={(e) =>
+                                handleMarksChange(s.id, e.target.value)
+                              }
                               min="0"
                               max="100"
                               className="w-20 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 text-center"

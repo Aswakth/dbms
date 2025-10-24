@@ -5,6 +5,8 @@ import com.example.backend.repository.*;
 import com.example.backend.service.FileStorageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
@@ -17,7 +19,25 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/teacher")
 public class TeacherController {
+    private static final Logger log = LoggerFactory.getLogger(TeacherController.class);
 
+    // Resolve a teacher by email with tolerant normalization.
+    // First try case-insensitive exact match. If not found, scan all teachers
+    // and compare normalized emails (trim + remove whitespace) to tolerate
+    // accidental spaces stored in the DB (common source of lookup misses).
+    private Optional<Teacher> resolveTeacherByEmail(String email) {
+        if (email == null) return Optional.empty();
+        String norm = email.trim();
+        Optional<Teacher> t = teacherRepository.findByEmailIgnoreCase(norm);
+        if (t.isPresent()) return t;
+        String normNoSpace = norm.replaceAll("\\s+", "").toLowerCase();
+        for (Teacher other : teacherRepository.findAll()) {
+            if (other.getEmail() == null) continue;
+            String otherNorm = other.getEmail().trim().replaceAll("\\s+", "").toLowerCase();
+            if (otherNorm.equals(normNoSpace)) return Optional.of(other);
+        }
+        return Optional.empty();
+    }
     private final AssignmentRepository assignmentRepository;
     private final StudentRepository studentRepository;
     private final AttendanceRepository attendanceRepository;
@@ -112,9 +132,11 @@ public class TeacherController {
                                               @RequestParam("teacherEmail") String teacherEmail,
                                               @RequestParam(value = "file", required = false) MultipartFile file) throws Exception {
         // Find the teacher
-        String teacherEmailNorm = teacherEmail.trim().toLowerCase();
-        Optional<Teacher> teacherOpt = teacherRepository.findByEmail(teacherEmailNorm);
+        log.info("uploadAssignment called with teacherEmail='{}' subjectId='{}' title='{}'", teacherEmail, subjectId, title);
+    String teacherEmailNorm = teacherEmail == null ? null : teacherEmail.trim();
+    Optional<Teacher> teacherOpt = resolveTeacherByEmail(teacherEmailNorm);
         if (teacherOpt.isEmpty()) {
+            log.warn("Teacher not found for email='{}'", teacherEmailNorm);
             return ResponseEntity.badRequest().body("Teacher not found");
         }
         
@@ -168,9 +190,11 @@ public class TeacherController {
 
     @GetMapping("/assignments/submissions")
     public ResponseEntity<List<AssignmentSubmissionDto>> getAssignmentSubmissionsByTeacher(@RequestParam String teacherEmail) {
-        String teacherEmailNorm = teacherEmail.trim().toLowerCase();
-        Optional<Teacher> teacherOpt = teacherRepository.findByEmail(teacherEmailNorm);
+        log.info("getAssignmentSubmissionsByTeacher called for teacherEmail='{}'", teacherEmail);
+    String teacherEmailNorm = teacherEmail == null ? null : teacherEmail.trim();
+    Optional<Teacher> teacherOpt = resolveTeacherByEmail(teacherEmailNorm);
         if (teacherOpt.isEmpty()) {
+            log.warn("Teacher not found for email='{}'", teacherEmailNorm);
             return ResponseEntity.badRequest().build();
         }
         
@@ -222,26 +246,35 @@ public class TeacherController {
         return ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/classes/{teacherEmail}/students")
+    @GetMapping("/classes/{teacherEmail:.+}/students")
     public ResponseEntity<List<StudentDto>> studentsInClass(@PathVariable String teacherEmail,
                                                             @RequestParam String subjectId,
                                                             @RequestParam(required = false) String date,
                                                             @RequestParam(required = false) String semester) {
-        String teacherEmailNorm = teacherEmail == null ? null : teacherEmail.trim().toLowerCase();
-        Optional<Teacher> t = teacherRepository.findByEmail(teacherEmailNorm);
-        if (t.isEmpty()) return ResponseEntity.ok(List.of());
+        log.info("studentsInClass called with teacherEmail='{}' subjectId='{}'", teacherEmail, subjectId);
+    String teacherEmailNorm = teacherEmail == null ? null : teacherEmail.trim();
+    Optional<Teacher> t = resolveTeacherByEmail(teacherEmailNorm);
+        if (t.isEmpty()) {
+            log.warn("studentsInClass: teacher not found for email='{}'", teacherEmailNorm);
+            return ResponseEntity.ok(List.of());
+        }
         List<Enrollment> enrollments = enrollmentRepository.findByTeacherAndSubjectId(t.get(), subjectId);
+        log.info("studentsInClass: found {} enrollments for teacherEmail='{}' subjectId='{}'", enrollments.size(), teacherEmailNorm, subjectId);
         List<StudentDto> list = enrollments.stream().map(e -> {
             Student s = e.getStudent(); StudentDto d = new StudentDto(); d.id = s.getId(); d.name = s.getName(); return d;
         }).collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 
-    @PostMapping("/classes/{teacherEmail}/attendance")
+    @PostMapping("/classes/{teacherEmail:.+}/attendance")
     public ResponseEntity<?> submitAttendance(@PathVariable String teacherEmail, @RequestParam String subjectId, @RequestBody AttendanceSubmit body) {
-        String teacherEmailNorm = teacherEmail == null ? null : teacherEmail.trim().toLowerCase();
-        Optional<Teacher> t = teacherRepository.findByEmail(teacherEmailNorm);
-        if (t.isEmpty()) return ResponseEntity.badRequest().build();
+        log.info("submitAttendance called by teacherEmail='{}' subjectId='{}' date='{}' entries={} ", teacherEmail, subjectId, body.date, body.attendance == null ? 0 : body.attendance.size());
+    String teacherEmailNorm = teacherEmail == null ? null : teacherEmail.trim();
+    Optional<Teacher> t = resolveTeacherByEmail(teacherEmailNorm);
+        if (t.isEmpty()) {
+            log.warn("submitAttendance: teacher not found for email='{}'", teacherEmailNorm);
+            return ResponseEntity.badRequest().build();
+        }
         Teacher teacher = t.get();
         if (body.date == null || body.date.isBlank()) return ResponseEntity.badRequest().body("date is required");
         for (AttendanceSubmit.Att a : body.attendance) {
@@ -259,14 +292,19 @@ public class TeacherController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/classes/{teacherEmail}/results")
+    @GetMapping("/classes/{teacherEmail:.+}/results")
     public ResponseEntity<List<ResultDto>> getResultsForClass(@PathVariable String teacherEmail,
                                                               @RequestParam String subjectId) {
-        String teacherEmailNorm = teacherEmail == null ? null : teacherEmail.trim().toLowerCase();
-        Optional<Teacher> t = teacherRepository.findByEmail(teacherEmailNorm);
-        if (t.isEmpty()) return ResponseEntity.ok(List.of());
-        
+        log.info("getResultsForClass called with teacherEmail='{}' subjectId='{}'", teacherEmail, subjectId);
+    String teacherEmailNorm = teacherEmail == null ? null : teacherEmail.trim();
+    Optional<Teacher> t = resolveTeacherByEmail(teacherEmailNorm);
+        if (t.isEmpty()) {
+            log.warn("getResultsForClass: teacher not found for email='{}'", teacherEmailNorm);
+            return ResponseEntity.ok(List.of());
+        }
+
         List<Enrollment> enrollments = enrollmentRepository.findByTeacherAndSubjectId(t.get(), subjectId);
+        log.info("getResultsForClass: found {} enrollments for teacherEmail='{}' subjectId='{}'", enrollments.size(), teacherEmailNorm, subjectId);
         List<ResultDto> results = new ArrayList<>();
         
         for (Enrollment enrollment : enrollments) {
@@ -286,12 +324,12 @@ public class TeacherController {
         return ResponseEntity.ok(results);
     }
 
-    @PostMapping("/classes/{teacherEmail}/results")
+    @PostMapping("/classes/{teacherEmail:.+}/results")
     public ResponseEntity<?> submitResults(@PathVariable String teacherEmail, 
                                            @RequestParam String subjectId, 
                                            @RequestBody ResultSubmit body) {
-        String teacherEmailNorm = teacherEmail == null ? null : teacherEmail.trim().toLowerCase();
-        Optional<Teacher> t = teacherRepository.findByEmail(teacherEmailNorm);
+    String teacherEmailNorm = teacherEmail == null ? null : teacherEmail.trim();
+    Optional<Teacher> t = resolveTeacherByEmail(teacherEmailNorm);
         if (t.isEmpty()) return ResponseEntity.badRequest().build();
         Teacher teacher = t.get();
         
