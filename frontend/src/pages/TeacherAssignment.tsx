@@ -1,10 +1,13 @@
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import axios from "axios";
+import { useAuth } from "../firebase/AuthProvider";
 
 const AssignmentUpload = () => {
+  const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [subjectId, setSubjectId] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [message, setMessage] = useState("");
 
@@ -18,24 +21,33 @@ const AssignmentUpload = () => {
   // Handle form submission
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!title || !description || !file) {
-      setMessage("Please fill all fields and select a file.");
+    if (!title || !description || !subjectId) {
+      setMessage("Please fill all fields (title, description, and subject ID).");
+      return;
+    }
+
+    if (!user?.email) {
+      setMessage("Please log in to upload assignments.");
       return;
     }
 
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
-    formData.append("file", file);
+    formData.append("subjectId", subjectId);
+    formData.append("teacherEmail", user.email);
+    if (file) {
+      formData.append("file", file);
+    }
 
     try {
-      // Replace with your backend endpoint
-      const res = await axios.post("/api/assignments/upload", formData, {
+      await axios.post("/api/teacher/assignments/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setMessage("Assignment uploaded successfully!");
+      setMessage("Assignment uploaded successfully! All students enrolled in this subject will be notified.");
       setTitle("");
       setDescription("");
+      setSubjectId("");
       setFile(null);
     } catch (err) {
       console.error(err);
@@ -84,6 +96,22 @@ const AssignmentUpload = () => {
 
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-700">
+                Subject ID
+              </label>
+              <input
+                type="text"
+                placeholder="Enter subject ID (e.g., MATH101, CS201)"
+                value={subjectId}
+                onChange={(e) => setSubjectId(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+              />
+              <p className="text-xs text-gray-500">
+                All students enrolled in this subject will receive a notification
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
                 Description
               </label>
               <textarea
@@ -100,7 +128,7 @@ const AssignmentUpload = () => {
 
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-700">
-                Assignment File
+                Assignment File (Optional)
               </label>
               <div className="relative">
                 <input
@@ -118,7 +146,7 @@ const AssignmentUpload = () => {
                 </div>
               )}
               <p className="text-xs text-gray-500">
-                Upload assignment documents, worksheets, or reference materials
+                Upload assignment documents, worksheets, or reference materials (optional)
               </p>
             </div>
 

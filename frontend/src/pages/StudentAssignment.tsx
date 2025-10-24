@@ -2,10 +2,12 @@
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import axios from "axios";
+import { useAuth } from "../firebase/AuthProvider";
 
 const StudentAssignment = () => {
-  const [classId, setClassId] = useState("");
+  const { user } = useAuth();
   const [assignmentId, setAssignmentId] = useState("");
+  const [submissionNotes, setSubmissionNotes] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [message, setMessage] = useState("");
 
@@ -19,15 +21,25 @@ const StudentAssignment = () => {
   // Submit the assignment
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!classId || !assignmentId || !file) {
-      setMessage("Please select class, assignment, and file.");
+    if (!assignmentId) {
+      setMessage("Please enter assignment ID.");
+      return;
+    }
+
+    if (!user?.email) {
+      setMessage("Please log in to submit assignments.");
       return;
     }
 
     const formData = new FormData();
-    formData.append("file", file);
-    formData.append("classId", classId);
     formData.append("assignmentId", assignmentId);
+    formData.append("studentEmail", user.email);
+    if (submissionNotes) {
+      formData.append("submissionNotes", submissionNotes);
+    }
+    if (file) {
+      formData.append("file", file);
+    }
 
     try {
       await axios.post("/api/student/assignments/submit", formData, {
@@ -37,8 +49,8 @@ const StudentAssignment = () => {
       });
       setMessage("Assignment submitted successfully!");
       setFile(null);
-      setClassId("");
       setAssignmentId("");
+      setSubmissionNotes("");
     } catch (err) {
       console.error(err);
       setMessage("Error submitting assignment.");
@@ -75,19 +87,6 @@ const StudentAssignment = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-700">
-                Class ID
-              </label>
-              <input
-                type="text"
-                placeholder="Enter your class ID"
-                value={classId}
-                onChange={(e) => setClassId(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">
                 Assignment ID
               </label>
               <input
@@ -101,7 +100,20 @@ const StudentAssignment = () => {
 
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-700">
-                Assignment File
+                Submission Notes (Optional)
+              </label>
+              <textarea
+                placeholder="Add any notes about your submission..."
+                value={submissionNotes}
+                onChange={(e) => setSubmissionNotes(e.target.value)}
+                rows={3}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder-gray-400 resize-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Assignment File (Optional)
               </label>
               <div className="relative">
                 <input

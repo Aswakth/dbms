@@ -1,5 +1,6 @@
 // src/pages/TeacherAttendance.tsx
 import { useState } from "react";
+import { useAuth } from "../firebase/AuthProvider";
 import type { FormEvent } from "react";
 import axios from "axios";
 
@@ -10,21 +11,25 @@ interface Student {
 }
 
 const TeacherAttendance = () => {
-  const [classId, setClassId] = useState("");
+  const { user } = useAuth();
+  const teacherEmail = user?.email || "";
+  const [subjectId, setSubjectId] = useState("");
   const [date, setDate] = useState(""); // yyyy-mm-dd
   const [students, setStudents] = useState<Student[]>([]);
   const [message, setMessage] = useState("");
 
   // Fetch students for a particular class and date
   const fetchStudents = async () => {
-    if (!classId || !date) {
-      setMessage("Please enter class ID and date.");
+    if (!teacherEmail || !subjectId) {
+      setMessage("Please login and enter Subject ID.");
       return;
     }
 
     try {
       const res = await axios.get(
-        `/api/classes/${classId}/students?date=${date}`
+        `/api/teacher/classes/${encodeURIComponent(
+          teacherEmail
+        )}/students?subjectId=${encodeURIComponent(subjectId)}`
       );
 
       // Initialize attendance as false or use existing data
@@ -51,16 +56,23 @@ const TeacherAttendance = () => {
   // Submit attendance to backend
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!classId || !date || students.length === 0) {
-      setMessage("Fetch students first.");
+    if (!teacherEmail || !subjectId || !date || students.length === 0) {
+      setMessage(
+        "Fetch students first and ensure date is set before submitting."
+      );
       return;
     }
 
     try {
-      await axios.post(`/api/classes/${classId}/attendance`, {
-        date,
-        attendance: students.map((s) => ({ id: s.id, present: s.present })),
-      });
+      await axios.post(
+        `/api/teacher/classes/${encodeURIComponent(
+          teacherEmail
+        )}/attendance?subjectId=${encodeURIComponent(subjectId)}`,
+        {
+          date,
+          attendance: students.map((s) => ({ id: s.id, present: s.present })),
+        }
+      );
       setMessage("Attendance submitted successfully!");
     } catch (err) {
       console.error(err);
@@ -106,14 +118,25 @@ const TeacherAttendance = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700">
-                    Class ID
+                    Teacher (logged in)
+                  </label>
+                  <input
+                    type="email"
+                    value={teacherEmail}
+                    readOnly
+                    className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl focus:outline-none transition-all duration-200 placeholder-gray-400"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Subject ID
                   </label>
                   <input
                     type="text"
-                    placeholder="Enter class identifier"
-                    value={classId}
-                    onChange={(e) => setClassId(e.target.value)}
-                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+                    placeholder="Enter subject id"
+                    value={subjectId}
+                    onChange={(e) => setSubjectId(e.target.value)}
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
                   />
                 </div>
                 <div className="space-y-2">
@@ -212,7 +235,7 @@ const TeacherAttendance = () => {
               </div>
             )}
 
-            {students.length === 0 && classId && date && (
+            {students.length === 0 && teacherEmail && date && (
               <div className="text-center py-16">
                 <div className="bg-gray-50 rounded-full w-24 h-24 mx-auto flex items-center justify-center mb-6">
                   <div className="w-12 h-12 bg-gray-200 rounded-full"></div>

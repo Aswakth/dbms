@@ -43,6 +43,12 @@
             <version>1.18.32</version>
             <scope>provided</scope>
         </dependency>
+        <!-- Firebase Admin SDK for server-side token verification -->
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-admin</artifactId>
+            <version>9.1.1</version>
+        </dependency>
     </dependencies>
 
     <build>

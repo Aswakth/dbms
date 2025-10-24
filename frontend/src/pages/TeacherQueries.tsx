@@ -5,7 +5,7 @@ import axios from "axios";
 
 interface Query {
   id: string;
-  studentName: string;
+  studentName: string; // contains student email
   message: string;
   date: string;
   reply?: string;

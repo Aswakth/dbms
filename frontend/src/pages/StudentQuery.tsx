@@ -7,6 +7,7 @@ const StudentQuery = () => {
   const [teacherId, setTeacherId] = useState("");
   const [query, setQuery] = useState("");
   const [message, setMessage] = useState("");
+  const [studentEmail, setStudentEmail] = useState("");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -19,10 +20,12 @@ const StudentQuery = () => {
       await axios.post(`/api/student/queries`, {
         teacherId,
         message: query,
+        studentEmail,
       });
       setMessage("Query submitted successfully!");
       setTeacherId("");
       setQuery("");
+      setStudentEmail("");
     } catch (err) {
       console.error(err);
       setMessage("Error submitting query.");
@@ -64,6 +67,19 @@ const StudentQuery = () => {
                 placeholder="Enter teacher's ID or email address"
                 value={teacherId}
                 onChange={(e) => setTeacherId(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Your Email
+              </label>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={studentEmail}
+                onChange={(e) => setStudentEmail(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
               />
             </div>
