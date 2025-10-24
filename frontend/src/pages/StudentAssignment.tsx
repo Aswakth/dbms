@@ -32,6 +32,17 @@ const StudentAssignment = () => {
       return;
     }
 
+    // Require submission notes and file
+    if (!submissionNotes || submissionNotes.trim() === "") {
+      setMessage("Please add submission notes — this field is required.");
+      return;
+    }
+
+    if (!file) {
+      setMessage("Please attach a file for your submission — this field is required.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("assignmentId", assignmentId);
     formData.append("studentEmail", user.email);
@@ -108,8 +119,8 @@ const StudentAssignment = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">
-                Submission Notes (Optional)
+        <label className="block text-sm font-semibold text-gray-700">
+          Submission Notes (required)
               </label>
               <textarea
                 placeholder="Add any notes about your submission..."
@@ -122,12 +133,13 @@ const StudentAssignment = () => {
 
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-700">
-                Assignment File (Optional)
+                Assignment File (required)
               </label>
               <div className="relative">
                 <input
                   type="file"
                   onChange={handleFileChange}
+                  required
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer transition-all duration-200"
                 />
               </div>

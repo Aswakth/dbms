@@ -88,10 +88,25 @@ const StudentHome: React.FC = () => {
       console.log('Assignments response:', res.data);
       
       if (Array.isArray(res.data)) {
-        setAssignments(res.data);
+        // filter out dismissed assignments stored in localStorage
+        const dismissed = JSON.parse(localStorage.getItem("dismissedAssignments" ) || "[]") as number[];
+        setAssignments(res.data.filter((a: Assignment) => !dismissed.includes(a.id)));
       }
     } catch (err) {
       console.error('Error fetching assignments:', err);
+    }
+  };
+
+  const dismissAssignment = (id: number) => {
+    try {
+      const dismissed = JSON.parse(localStorage.getItem("dismissedAssignments") || "[]") as number[];
+      if (!dismissed.includes(id)) {
+        dismissed.push(id);
+        localStorage.setItem("dismissedAssignments", JSON.stringify(dismissed));
+      }
+      setAssignments((prev) => prev.filter((a) => a.id !== id));
+    } catch (e) {
+      console.error('Error dismissing assignment', e);
     }
   };
 
@@ -244,6 +259,17 @@ const StudentHome: React.FC = () => {
                         key={assignment.id}
                         className="bg-gradient-to-r from-gray-50 to-emerald-50 p-6 rounded-xl border border-gray-100 hover:shadow-md transition-all duration-200"
                       >
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => dismissAssignment(assignment.id)}
+                            title="Dismiss assignment"
+                            className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-2">
