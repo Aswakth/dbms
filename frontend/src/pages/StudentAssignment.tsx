@@ -1,8 +1,9 @@
 // src/pages/StudentAssignment.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import axios from "axios";
 import { useAuth } from "../firebase/AuthProvider";
+import { useParams } from "react-router-dom";
 
 const StudentAssignment = () => {
   const { user } = useAuth();
@@ -56,6 +57,14 @@ const StudentAssignment = () => {
       setMessage("Error submitting assignment.");
     }
   };
+
+  // If route param contains assignment id, prefill the field
+  const params = useParams();
+  useEffect(() => {
+    if (params && (params as any).id) {
+      setAssignmentId((params as any).id as string);
+    }
+  }, [params]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-cyan-100 flex items-center justify-center p-4">

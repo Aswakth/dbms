@@ -314,22 +314,7 @@ const StudentHome: React.FC = () => {
 
               <div className="p-8">
                 <div className="space-y-3">
-                  <Link
-                    to="/student/assignment"
-                    className="flex items-center p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-100 hover:from-indigo-100 hover:to-purple-100 hover:shadow-md transition-all duration-200 group"
-                  >
-                    <div className="bg-indigo-500 rounded-lg p-2 mr-4">
-                      <div className="w-5 h-5 bg-white rounded"></div>
-                    </div>
-                    <div>
-                      <span className="font-semibold text-gray-800 group-hover:text-indigo-700">
-                        Submit Assignment
-                      </span>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Upload your completed work
-                      </p>
-                    </div>
-                  </Link>
+                  {/* Removed redundant generic Submit Assignment link — use per-assignment Submit buttons above */}
 
                   <Link
                     to="/student/link"
